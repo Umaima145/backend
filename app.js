@@ -5,6 +5,8 @@ import postModel from "./models/postSchema.js";
 import userModel from "./models/userSchema.js";  
 import bcrypt from "bcryptjs";
 import cors from "cors";
+import jwt from 'jsonwebtoken'
+import userVerifyMidlle from "./middlewear/userVerify.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -153,9 +155,9 @@ app.post("/api/signup", async (req, res) => {
 
 // Login Api
 
-app.post("/api/login", async (req, res) => {
+app.post("/api/login",async (req, res) => {
   const { email, password } = req.body;
-
+  
   if (!email || !password) {
     res.json({
       message: "required fields are missing",
@@ -184,12 +186,33 @@ app.post("/api/login", async (req, res) => {
 
     return;
   }
+  var token = jwt.sign({ email: emailExist.email, firstname:emailExist.firstName, 
+   }, process.env.J_W_P_Token);
 
   res.json({
     message: "login successfully",
     status: true,
+    token
   });
 });
+
+
+app.get("/api/getusers", userVerifyMidlle, async(req,res)=>{
+    try {
+        const response = await userModel.find({})
+        res.json({
+            message:"all users get ",
+            status:true,
+        data:response,
+        })
+    } catch (error) {
+        res.json({
+            message:error
+        })
+    }
+})
+
+
 
 app.listen(PORT, () => {
   console.log(`server is running on http:localhost:${PORT}`);
